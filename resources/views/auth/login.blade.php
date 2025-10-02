@@ -13,8 +13,8 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
     <!-- Custom CSS -->
-    <link href="{{ asset('assets/css/app.css') }}" rel="stylesheet">
-    <link href="{{ asset('assets/css/login.css') }}" rel="stylesheet">
+    <link href="{{ asset('assets/css/app.css') }}?v={{ time() }}" rel="stylesheet">
+    <link href="{{ asset('assets/css/login.css') }}?v={{ time() }}" rel="stylesheet">
 </head>
 <body class="login-page">
     <!-- Background decorations -->
@@ -120,7 +120,7 @@
                         <input type="checkbox" id="remember" name="remember" class="checkbox-input">
                         <label for="remember" class="checkbox-label">จดจำการเข้าสู่ระบบ</label>
                     </div>
-                    <a href="#" class="forgot-password">ลืมรหัสผ่าน?</a>
+                    <a href="{{ route('password.request') }}" class="forgot-password">ลืมรหัสผ่าน?</a>
                 </div>
 
                 <!-- Submit Button -->

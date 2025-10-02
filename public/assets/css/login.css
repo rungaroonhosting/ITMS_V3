@@ -178,10 +178,10 @@ body.login-page {
     width: 150px;
     height: 80px;
     margin-bottom: 2rem;
-    /* เว้นที่ไว้สำหรับใส่ Logo ของคุณ */
-    /* background-image: url('/assets/images/logo.png'); */
-    /* background-size: contain; */
-    /* background-repeat: no-repeat; */
+    /*เว้นที่ไว้สำหรับใส่ Logo ของคุณ */
+    /*background-image: url('/assets/images/logo.png'); */
+    /*background-size: contain; */
+    /*background-repeat: no-repeat; */
 }
 
 .service-title {
@@ -228,7 +228,7 @@ body.login-page {
 }
 
 /* Fallback emoji */
-.character-illustration:empty::before {
+/*.character-illustration:empty::before {
     content: '👨‍💻';
     font-size: 6rem;
     display: flex;
@@ -237,7 +237,7 @@ body.login-page {
     width: 100%;
     height: 100%;
     opacity: 0.3;
-}
+}*/
 
 /* Right Section - Login Card - ลบ margin-left: auto */
 .login-card {
