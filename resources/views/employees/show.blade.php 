@@ -1,0 +1,395 @@
+@extends('layouts.app')
+
+@section('title', 'รายละเอียดพนักงาน - ' . $employee->full_name_th)
+
+@section('styles')
+<link rel="stylesheet" href="{{ asset('assets/css/employees.css') }}">
+@endsection
+
+@section('content')
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="bi bi-person-badge me-2"></i>รายละเอียดพนักงาน
+                    </h2>
+                    <p class="text-muted mb-0">ข้อมูลพนักงานฉบับเต็ม</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{{ route('employees.index') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>กลับ
+                    </a>
+                    @can('update', $employee)
+                    <a href="{{ route('employees.edit', $employee) }}" class="btn btn-warning">
+                        <i class="bi bi-pencil me-2"></i>แก้ไข
+                    </a>
+                    @endcan
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <!-- Left Column: Photo & Basic Info -->
+                <div class="col-lg-4">
+                    <!-- Photo Card -->
+                    <div class="card mb-4">
+                        <div class="card-body text-center">
+                            @if($employee->has_photo)
+                            <img src="{{ $employee->photo_url }}" 
+                                 alt="{{ $employee->full_name_th }}" 
+                                 class="employee-photo-lg mb-3">
+                            @else
+                            <div class="employee-photo-placeholder-lg mb-3">
+                                {{ mb_substr($employee->first_name_th, 0, 1) }}
+                            </div>
+                            @endif
+                            
+                            <h4 class="mb-1">{{ $employee->full_name_th }}</h4>
+                            @if($employee->nickname)
+                            <p class="text-muted mb-2">({{ $employee->nickname }})</p>
+                            @endif
+                            @if($employee->full_name_en)
+                            <p class="text-muted mb-3">{{ $employee->full_name_en }}</p>
+                            @endif
+
+                            <!-- Status Badge -->
+                            <div class="mb-3">
+                                <span class="badge bg-{{ $employee->status === 'active' ? 'success' : 'secondary' }} fs-6">
+                                    {{ $employee->status === 'active' ? 'ใช้งาน' : 'ไม่ใช้งาน' }}
+                                </span>
+                            </div>
+
+                            <!-- Role Badge -->
+                            @php
+                            $roleColors = [
+                                'super_admin' => 'danger',
+                                'it_admin' => 'warning',
+                                'hr' => 'info',
+                                'employee' => 'primary',
+                                'express' => 'success'
+                            ];
+                            $roleLabels = [
+                                'super_admin' => 'Super Admin',
+                                'it_admin' => 'IT Admin',
+                                'hr' => 'HR',
+                                'employee' => 'Employee',
+                                'express' => 'Express'
+                            ];
+                            @endphp
+                            <span class="badge bg-{{ $roleColors[$employee->role] ?? 'secondary' }} fs-6">
+                                {{ $roleLabels[$employee->role] ?? $employee->role }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    @can('update', $employee)
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="bi bi-lightning me-2"></i>การจัดการด่วน</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <!-- Upload Photo -->
+                                <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#uploadPhotoModal">
+                                    <i class="bi bi-upload me-2"></i>อัปโหลดรูปภาพ
+                                </button>
+
+                                @if($employee->has_photo)
+                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="deletePhoto({{ $employee->id }})">
+                                    <i class="bi bi-trash me-2"></i>ลบรูปภาพ
+                                </button>
+                                @endif
+
+                                <!-- Change Status -->
+                                @if(in_array(auth()->user()->role, ['super_admin', 'it_admin']))
+                                <button type="button" class="btn btn-outline-warning btn-sm" onclick="toggleStatus({{ $employee->id }}, '{{ $employee->status }}')">
+                                    <i class="bi bi-toggle-on me-2"></i>เปลี่ยนสถานะ
+                                </button>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                    @endcan
+                </div>
+
+                <!-- Right Column: Details -->
+                <div class="col-lg-8">
+                    <!-- Basic Information -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-person me-2"></i>ข้อมูลพื้นฐาน</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">รหัสพนักงาน</label>
+                                    <p class="fw-bold">{{ $employee->employee_code }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">บทบาท</label>
+                                    <p>
+                                        <span class="badge bg-{{ $roleColors[$employee->role] ?? 'secondary' }}">
+                                            {{ $roleLabels[$employee->role] ?? $employee->role }}
+                                        </span>
+                                    </p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">ชื่อ-นามสกุล (ไทย)</label>
+                                    <p class="fw-bold">{{ $employee->full_name_th }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">ชื่อ-นามสกุล (English)</label>
+                                    <p>{{ $employee->full_name_en ?: '-' }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">ชื่อเล่น</label>
+                                    <p>{{ $employee->nickname ?: '-' }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Information -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-envelope me-2"></i>ข้อมูลติดต่อ</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">อีเมล</label>
+                                    <p>
+                                        <a href="mailto:{{ $employee->email }}" class="text-decoration-none">
+                                            <i class="bi bi-envelope me-2"></i>{{ $employee->email }}
+                                        </a>
+                                    </p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">เบอร์โทร</label>
+                                    <p>
+                                        @if($employee->phone)
+                                        <a href="tel:{{ $employee->phone }}" class="text-decoration-none">
+                                            <i class="bi bi-telephone me-2"></i>{{ $employee->phone }}
+                                        </a>
+                                        @else
+                                        -
+                                        @endif
+                                    </p>
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label text-muted">Login Email</label>
+                                    <p>{{ $employee->login_email ?: '-' }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Organization -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-building me-2"></i>สังกัด</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label text-muted">แผนก</label>
+                                    <p>
+                                        @if($employee->department)
+                                        <span class="badge bg-info">{{ $employee->department->name }}</span>
+                                        @else
+                                        -
+                                        @endif
+                                    </p>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label text-muted">สาขา</label>
+                                    <p>
+                                        @if($employee->branch)
+                                        <span class="badge bg-secondary">{{ $employee->branch->name }}</span>
+                                        @else
+                                        -
+                                        @endif
+                                    </p>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label text-muted">ตำแหน่ง</label>
+                                    <p>{{ $employee->position ?: '-' }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Express System -->
+                    @if($employee->express_username || ($employee->department && $employee->department->express_enabled))
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-hdd-network me-2"></i>ระบบ Express</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">Express Username</label>
+                                    <p class="fw-bold">{{ $employee->express_username ?: '-' }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">Express Password</label>
+                                    <p class="fw-bold">{{ $employee->express_password ? str_repeat('•', 4) : '-' }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
+                    <!-- Permissions -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-shield-check me-2"></i>สิทธิ์การใช้งาน</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <div class="permission-item">
+                                        <i class="bi bi-{{ $employee->vpn_access ? 'check-circle-fill text-success' : 'x-circle text-muted' }}"></i>
+                                        <span>เข้าถึง VPN</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="permission-item">
+                                        <i class="bi bi-{{ $employee->color_printing ? 'check-circle-fill text-success' : 'x-circle text-muted' }}"></i>
+                                        <span>พิมพ์สี</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="permission-item">
+                                        <i class="bi bi-{{ $employee->remote_work ? 'check-circle-fill text-success' : 'x-circle text-muted' }}"></i>
+                                        <span>ทำงานระยะไกล</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="permission-item">
+                                        <i class="bi bi-{{ $employee->admin_access ? 'check-circle-fill text-success' : 'x-circle text-muted' }}"></i>
+                                        <span>สิทธิ์ผู้ดูแล</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Metadata -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>ข้อมูลเพิ่มเติม</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">วันที่สร้าง</label>
+                                    <p>{{ $employee->created_at->format('d/m/Y H:i:s') }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">อัปเดตล่าสุด</label>
+                                    <p>{{ $employee->updated_at->format('d/m/Y H:i:s') }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upload Photo Modal -->
+@can('update', $employee)
+<div class="modal fade" id="uploadPhotoModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="{{ route('employees.uploadPhoto', $employee) }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title">อัปโหลดรูปภาพพนักงาน</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-3">
+                        <div id="modalPhotoPreview" class="photo-preview-modal">
+                            <i class="bi bi-person-circle"></i>
+                        </div>
+                    </div>
+                    <input type="file" name="photo" id="modalPhotoInput" class="form-control" accept="image/*" required>
+                    <small class="text-muted">JPEG, JPG, PNG, GIF (สูงสุด 2MB, ขนาด 50x50 ถึง 2000x2000px)</small>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                    <button type="submit" class="btn btn-primary">อัปโหลด</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endcan
+@endsection
+
+@section('scripts')
+<script src="{{ asset('assets/js/employees.js') }}"></script>
+<script>
+// Photo Upload Preview
+document.getElementById('modalPhotoInput')?.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('modalPhotoPreview').innerHTML = 
+                `<img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+function deletePhoto(employeeId) {
+    if (confirm('คุณต้องการลบรูปภาพนี้หรือไม่?')) {
+        fetch(`/employees/${employeeId}/photo`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert(data.message);
+            }
+        });
+    }
+}
+
+function toggleStatus(employeeId, currentStatus) {
+    const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+    if (confirm(`คุณต้องการเปลี่ยนสถานะเป็น "${newStatus === 'active' ? 'ใช้งาน' : 'ไม่ใช้งาน'}" หรือไม่?`)) {
+        fetch(`/employees/${employeeId}/status`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({ status: newStatus })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert(data.message);
+            }
+        });
+    }
+}
+</script>
+@endsection

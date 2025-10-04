@@ -21,7 +21,7 @@ class AdminController extends Controller
         $stats = [
             'total_users' => User::count(),
             'active_users' => User::where('is_active', true)->count(),
-            'total_employees' => Employee::count(),
+            'total_employees' => Employee::withoutGlobalScopes()->count(),
             'active_employees' => Employee::where('is_active', true)->count(),
             'total_computers' => Computer::count(),
             'active_computers' => Computer::where('status', 'active')->count(),

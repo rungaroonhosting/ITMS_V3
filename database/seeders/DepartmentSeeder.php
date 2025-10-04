@@ -2,67 +2,93 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use App\Models\Department;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class DepartmentSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
+        $now = Carbon::now();
+        
         $departments = [
             [
-                'name' => 'ฝ่ายเทคโนโลยีสารสนเทศ (IT)',
-                'description' => 'รับผิดชอบด้านเทคโนโลยีสารสนเทศ ระบบคอมพิวเตอร์ และเครือข่าย',
+                'name' => 'IT',
+                'code' => 'IT',
+                'description' => 'แผนกเทคโนโลยีสารสนเทศ',
+                'express_enabled' => false,
                 'is_active' => true,
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
             [
-                'name' => 'ฝ่ายบุคคล (HR)',
-                'description' => 'รับผิดชอบด้านทรัพยากรบุคคล การสรรหา และการพัฒนาบุคลากร',
+                'name' => 'HR',
+                'code' => 'HR',
+                'description' => 'แผนกทรัพยากรบุคคล',
+                'express_enabled' => false,
                 'is_active' => true,
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
             [
-                'name' => 'ฝ่ายบัญชีและการเงิน',
-                'description' => 'รับผิดชอบด้านบัญชี การเงิน และการควบคุมงบประมาณ',
+                'name' => 'Accounting',
+                'code' => 'ACC',
+                'description' => 'แผนกบัญชี',
+                'express_enabled' => true,
                 'is_active' => true,
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
             [
-                'name' => 'ฝ่ายขายและการตลาด',
-                'description' => 'รับผิดชอบด้านการขาย การตลาด และการประชาสัมพันธ์',
+                'name' => 'Sales',
+                'code' => 'SALES',
+                'description' => 'แผนกขาย',
+                'express_enabled' => true,
                 'is_active' => true,
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
             [
-                'name' => 'ฝ่ายปฏิบัติการ',
-                'description' => 'รับผิดชอบด้านการปฏิบัติงาน การผลิต และการควบคุมคุณภาพ',
+                'name' => 'Marketing',
+                'code' => 'MKT',
+                'description' => 'แผนกการตลาด',
+                'express_enabled' => false,
                 'is_active' => true,
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
             [
-                'name' => 'ฝ่ายจัดซื้อจัดจ้าง',
-                'description' => 'รับผิดชอบด้านการจัดซื้อจัดจ้าง การเก็บรักษาพัสดุ และการควบคุมคลังสินค้า',
+                'name' => 'Finance',
+                'code' => 'FIN',
+                'description' => 'แผนกการเงิน',
+                'express_enabled' => true,
                 'is_active' => true,
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
             [
-                'name' => 'ฝ่ายกฎหมายและงานทั่วไป',
-                'description' => 'รับผิดชอบด้านกฎหมาย การประสานงาน และงานสนับสนุนทั่วไป',
+                'name' => 'Operations',
+                'code' => 'OPS',
+                'description' => 'แผนกปฏิบัติการ',
+                'express_enabled' => false,
                 'is_active' => true,
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
             [
-                'name' => 'ฝ่ายวิจัยและพัฒนา (R&D)',
-                'description' => 'รับผิดชอบด้านการวิจัย การพัฒนาผลิตภัณฑ์ และนวัตกรรม',
+                'name' => 'Purchasing',
+                'code' => 'PUR',
+                'description' => 'แผนกจัดซื้อ',
+                'express_enabled' => true,
                 'is_active' => true,
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
         ];
 
-        foreach ($departments as $department) {
-            Department::firstOrCreate(
-                ['name' => $department['name']],
-                $department
-            );
-        }
-
-        $this->command->info('Department seeder completed successfully!');
+        DB::table('departments')->insert($departments);
+        
+        $this->command->info('✅ Departments seeded successfully!');
     }
 }

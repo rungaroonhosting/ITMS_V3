@@ -5,91 +5,89 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Employee;
-use App\Models\Computer;
 use App\Models\Department;
+use App\Models\Branch;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
-    /**
-     * Create a new controller instance.
-     */
-    public function __construct()
-    {
-        $this->middleware('auth');
-    }
-
-    /**
-     * Show the application dashboard.
-     */
     public function index()
     {
-        $user = auth()->user();
+        $user = Auth::user();
         
-        // Statistics for dashboard
+        // สถิติพื้นฐาน
         $stats = [
             'total_users' => User::count(),
+            'active_users' => User::where('is_active', 1)->count(),
             'total_employees' => Employee::count(),
-            'total_computers' => Computer::count(),
+            'active_employees' => Employee::whereNull('deleted_at')->count(),
             'total_departments' => Department::count(),
+            'total_branches' => Branch::count(),
         ];
-
-        // Recent activities (placeholder for now)
-        $recent_activities = [];
-
-        return view('dashboard.index', compact('stats', 'recent_activities'));
+        
+        // พนักงานตามแผนก
+        $employeesByDepartment = Employee::select('department_id', DB::raw('count(*) as total'))
+            ->whereNull('deleted_at')
+            ->groupBy('department_id')
+            ->with('department')
+            ->get()
+            ->map(function($item) {
+                return [
+                    'department' => $item->department->name ?? 'ไม่ระบุแผนก',
+                    'total' => $item->total
+                ];
+            });
+        
+        // พนักงานตามสาขา
+        $employeesByBranch = Employee::select('branch_id', DB::raw('count(*) as total'))
+            ->whereNull('deleted_at')
+            ->groupBy('branch_id')
+            ->with('branch')
+            ->get()
+            ->map(function($item) {
+                return [
+                    'branch' => $item->branch->name ?? 'ไม่ระบุสาขา',
+                    'total' => $item->total
+                ];
+            });
+        
+        // กิจกรรมล่าสุด
+        $recentActivities = [
+            [
+                'icon' => 'fa-user-plus',
+                'color' => 'success',
+                'title' => 'เพิ่มพนักงานใหม่',
+                'description' => 'เพิ่มข้อมูลพนักงานเข้าสู่ระบบ',
+                'time' => '2 ชั่วโมงที่แล้ว'
+            ],
+            [
+                'icon' => 'fa-edit',
+                'color' => 'info',
+                'title' => 'แก้ไขข้อมูลพนักงาน',
+                'description' => 'อัปเดตข้อมูลส่วนตัว',
+                'time' => '5 ชั่วโมงที่แล้ว'
+            ],
+            [
+                'icon' => 'fa-building',
+                'color' => 'warning',
+                'title' => 'เพิ่มแผนกใหม่',
+                'description' => 'สร้างแผนกการตลาด',
+                'time' => '1 วันที่แล้ว'
+            ]
+        ];
+        
+        return view('dashboard', compact(
+            'user',
+            'stats',
+            'employeesByDepartment',
+            'employeesByBranch',
+            'recentActivities'
+        ));
     }
-
-    /**
-     * Show user profile
-     */
-    public function profile()
+    
+    public function adminDashboard()
     {
-        $user = auth()->user();
-        return view('dashboard.profile', compact('user'));
-    }
-
-    /**
-     * Update user profile
-     */
-    public function updateProfile(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . auth()->id(),
-        ]);
-
-        $user = auth()->user();
-        $user->update($request->only('name', 'email'));
-
-        return back()->with('success', 'ข้อมูลโปรไฟล์ถูกอัพเดทเรียบร้อยแล้ว');
-    }
-
-    /**
-     * Show change password form
-     */
-    public function showChangePassword()
-    {
-        return view('dashboard.change-password');
-    }
-
-    /**
-     * Update password
-     */
-    public function updatePassword(Request $request)
-    {
-        $request->validate([
-            'current_password' => 'required',
-            'password' => 'required|min:8|confirmed',
-        ]);
-
-        if (!Hash::check($request->current_password, auth()->user()->password)) {
-            return back()->withErrors(['current_password' => 'รหัสผ่านปัจจุบันไม่ถูกต้อง']);
-        }
-
-        auth()->user()->update([
-            'password' => Hash::make($request->password)
-        ]);
-
-        return back()->with('success', 'เปลี่ยนรหัสผ่านเรียบร้อยแล้ว');
+        return $this->index();
     }
 }

@@ -4,228 +4,358 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Database\Eloquent\SoftDeletes; 
 
 class Employee extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
+        // Basic Information
         'employee_code',
-        'keycard_id',
-        'name_th',
-        'surname_th',
-        'name_en',
-        'surname_en',
+        'first_name_th',
+        'last_name_th',
+        'first_name_en',
+        'last_name_en',
         'nickname',
-        'username_computer',
-        'password_computer',
-        'photocopy_code',
-        'email',
-        'email_password',
-        'department_id',
-        'express_username',
-        'express_code',
-        'can_print_color',
-        'can_use_vpn',
-        'is_active',
-        'start_date',
-        'end_date',
-    ];
-
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
-    protected $hidden = [
-        'password_computer',
-        'email_password',
-    ];
-
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
-    protected $casts = [
-        'can_print_color' => 'boolean',
-        'can_use_vpn' => 'boolean',
-        'is_active' => 'boolean',
-        'start_date' => 'date',
-        'end_date' => 'date',
-    ];
-
-    /**
-     * Boot method for auto-generation
-     */
-    protected static function boot()
-    {
-        parent::boot();
         
-        static::creating(function ($employee) {
-            // Auto-generate username_computer
-            if (empty($employee->username_computer) && $employee->name_en && $employee->surname_en) {
-                $employee->username_computer = strtolower($employee->name_en . '.' . $employee->surname_en);
-            }
-            
-            // Auto-generate password_computer
-            if (empty($employee->password_computer)) {
-                $employee->password_computer = Hash::make(self::generateRandomPassword(10));
-            }
-            
-            // Auto-generate photocopy_code
-            if (empty($employee->photocopy_code)) {
-                $employee->photocopy_code = str_pad(random_int(1, 9999), 4, '0', STR_PAD_LEFT);
-            }
-            
-            // Auto-generate email
-            if (empty($employee->email) && $employee->name_en && $employee->surname_en) {
-                $employee->email = strtolower($employee->name_en . '.' . $employee->surname_en . '@company.com');
-            }
-            
-            // Auto-generate email_password
-            if (empty($employee->email_password)) {
-                $employee->email_password = Hash::make(self::generateRandomPassword(10));
-            }
-            
-            // Auto-generate express_username (7 chars)
-            if (empty($employee->express_username)) {
-                $employee->express_username = strtoupper(substr(uniqid(), -7));
-            }
-            
-            // Auto-generate express_code (4 digits)
-            if (empty($employee->express_code)) {
-                $employee->express_code = str_pad(random_int(1, 9999), 4, '0', STR_PAD_LEFT);
-            }
-        });
-    }
+        // Contact Information
+        'email',
+        'login_email',
+        'phone',
+        
+        // Personal Information
+        'birth_date',
+        'gender',
+        'address',
+        
+        // Employment Information
+        'department_id',
+        'position_id',
+        'branch_id',
+        'supervisor_id',
+        'hire_date',
+        'termination_date',
+        
+        // System Access
+        'role',
+        'status',
+        'password',
+        
+        // Additional Passwords
+        'computer_password',
+        'email_password',
+        
+        // Express System
+        'express_username',
+        'express_password',
+        
+        // Permissions
+        'vpn_access',
+        'color_printing',
+        'remote_work',
+        'admin_access',
+        
+        // Photo
+        'photo',
+        
+        // Financial
+        'salary',
+        
+        // Emergency Contact
+        'emergency_contact_name',
+        'emergency_contact_phone',
+    ];
 
-    // =================== Relationships ===================
+    protected $hidden = [
+        'password',
+        'computer_password',
+        'email_password',
+        'express_password',
+    ];
+
+    protected $casts = [
+        'birth_date' => 'date',
+        'hire_date' => 'date',
+        'termination_date' => 'date',
+        'salary' => 'decimal:2',
+        'vpn_access' => 'boolean',
+        'color_printing' => 'boolean',
+        'remote_work' => 'boolean',
+        'admin_access' => 'boolean',
+    ];
+
+    // ==================== Relationships ====================
     
-    /**
-     * Get the department that owns the employee.
-     */
-    public function department()
+    public function department(): BelongsTo
     {
         return $this->belongsTo(Department::class);
     }
 
-    /**
-     * Get the user associated with the employee.
-     */
-    public function user()
+    public function position(): BelongsTo
     {
-        return $this->hasOne(User::class);
+        return $this->belongsTo(Position::class);
     }
 
-    /**
-     * Get computers assigned to this employee.
-     */
-    public function computers()
+    public function branch(): BelongsTo
     {
-        return $this->hasMany(Computer::class, 'assigned_to');
+        return $this->belongsTo(Branch::class);
     }
 
-    /**
-     * Get incidents reported by this employee.
-     */
-    public function incidents()
+    public function supervisor(): BelongsTo
     {
-        return $this->hasMany(Incident::class, 'reported_by');
+        return $this->belongsTo(Employee::class, 'supervisor_id');
     }
 
-    /**
-     * Get service requests made by this employee.
-     */
-    public function serviceRequests()
+    public function subordinates(): HasMany
     {
-        return $this->hasMany(ServiceRequest::class, 'requested_by');
+        return $this->hasMany(Employee::class, 'supervisor_id');
     }
 
-    /**
-     * Get agreement acceptances by this employee.
-     */
-    public function agreementAcceptances()
+    public function user(): HasOne
     {
-        return $this->hasMany(AgreementAcceptance::class);
+        return $this->hasOne(User::class, 'employee_id');
     }
 
-    // =================== Scopes ===================
+    // ==================== Accessors ====================
     
-    /**
-     * Scope for active employees
-     */
+    public function getFullNameThAttribute(): ?string
+    {
+        if (!$this->first_name_th || !$this->last_name_th) {
+            return null;
+        }
+        return $this->first_name_th . ' ' . $this->last_name_th;
+    }
+
+    public function getFullNameEnAttribute(): ?string
+    {
+        if (!$this->first_name_en || !$this->last_name_en) {
+            return null;
+        }
+        return $this->first_name_en . ' ' . $this->last_name_en;
+    }
+
+    public function getNameAttribute(): string
+    {
+        return $this->full_name_th ?? $this->full_name_en ?? $this->email;
+    }
+
+    public function getHasPhotoAttribute(): bool
+    {
+        return !empty($this->photo);
+    }
+
+    public function getPhotoUrlAttribute(): ?string
+    {
+        if (!$this->photo) {
+            return null;
+        }
+        
+        if (Storage::disk('public')->exists($this->photo)) {
+            return asset('storage/' . $this->photo);
+        }
+        
+        return null;
+    }
+
+    // ==================== Scopes ====================
+    
     public function scopeActive($query)
     {
-        return $query->where('is_active', true);
+        return $query->where('status', 'active');
     }
 
-    /**
-     * Scope for employees by department
-     */
+    public function scopeInactive($query)
+    {
+        return $query->where('status', 'inactive');
+    }
+
     public function scopeByDepartment($query, $departmentId)
     {
         return $query->where('department_id', $departmentId);
     }
 
-    // =================== Helper Methods ===================
+    public function scopeByBranch($query, $branchId)
+    {
+        return $query->where('branch_id', $branchId);
+    }
+
+    public function scopeByRole($query, $role)
+    {
+        return $query->where('role', $role);
+    }
+
+    public function scopeWithExpress($query)
+    {
+        return $query->whereNotNull('express_username');
+    }
+
+    public function scopeWithoutExpress($query)
+    {
+        return $query->whereNull('express_username');
+    }
+
+    public function scopeWithPhoto($query)
+    {
+        return $query->whereNotNull('photo');
+    }
+
+    public function scopeWithoutPhoto($query)
+    {
+        return $query->whereNull('photo');
+    }
+
+    // ==================== Photo Management Methods ====================
     
     /**
-     * Get full name in Thai
+     * Upload and save employee photo
      */
-    public function getFullNameThAttribute()
+    public function uploadPhoto($file): ?string
     {
-        return $this->name_th . ' ' . $this->surname_th;
-    }
+        try {
+            // Delete old photo if exists
+            if ($this->photo) {
+                $this->deletePhoto();
+            }
 
-    /**
-     * Get full name in English
-     */
-    public function getFullNameEnAttribute()
-    {
-        return $this->name_en . ' ' . $this->surname_en;
-    }
+            // Generate filename
+            $filename = 'employee_' . $this->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $path = 'employees/photos/' . $filename;
 
-    /**
-     * Get display name (nickname or full name)
-     */
-    public function getDisplayNameAttribute()
-    {
-        return $this->nickname ?: $this->full_name_th;
-    }
+            // Store file
+            $stored = Storage::disk('public')->put($path, file_get_contents($file));
 
-    /**
-     * Generate random password
-     */
-    public static function generateRandomPassword($length = 10)
-    {
-        $characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
-        $password = '';
-        for ($i = 0; $i < $length; $i++) {
-            $password .= $characters[random_int(0, strlen($characters) - 1)];
+            if ($stored) {
+                $this->update(['photo' => $path]);
+                return $path;
+            }
+
+            return null;
+        } catch (\Exception $e) {
+            Log::error('Photo upload failed: ' . $e->getMessage());
+            throw $e;
         }
-        return $password;
     }
 
     /**
-     * Check if employee can print color
+     * Delete employee photo
      */
-    public function canPrintColor()
+    public function deletePhoto(): bool
     {
-        return $this->can_print_color;
+        try {
+            if ($this->photo && Storage::disk('public')->exists($this->photo)) {
+                Storage::disk('public')->delete($this->photo);
+            }
+            
+            $this->update(['photo' => null]);
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Photo deletion failed: ' . $e->getMessage());
+            return false;
+        }
     }
 
     /**
-     * Check if employee can use VPN
+     * Get photo information
      */
-    public function canUseVpn()
+    public function getPhotoInfo(): array
     {
-        return $this->can_use_vpn;
+        if (!$this->has_photo) {
+            return [
+                'has_photo' => false,
+                'photo_url' => null,
+                'photo_path' => null,
+                'file_exists' => false,
+            ];
+        }
+
+        $fileExists = Storage::disk('public')->exists($this->photo);
+
+        return [
+            'has_photo' => true,
+            'photo_url' => $fileExists ? $this->photo_url : null,
+            'photo_path' => $this->photo,
+            'file_exists' => $fileExists,
+            'file_size' => $fileExists ? Storage::disk('public')->size($this->photo) : 0,
+            'updated_at' => $this->updated_at?->format('d/m/Y H:i:s'),
+        ];
+    }
+
+    // ==================== Helper Methods ====================
+    
+    /**
+     * Check if employee is super admin
+     */
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === 'super_admin';
+    }
+
+    /**
+     * Check if employee is IT admin
+     */
+    public function isItAdmin(): bool
+    {
+        return $this->role === 'it_admin';
+    }
+
+    /**
+     * Check if employee is HR
+     */
+    public function isHr(): bool
+    {
+        return $this->role === 'hr';
+    }
+
+    /**
+     * Check if employee has Express account
+     */
+    public function hasExpressAccount(): bool
+    {
+        return !empty($this->express_username);
+    }
+
+    /**
+     * Get role label in Thai
+     */
+    public function getRoleLabelAttribute(): string
+    {
+        return match($this->role) {
+            'super_admin' => 'ผู้ดูแลระบบสูงสุด',
+            'it_admin' => 'ผู้ดูแลระบบ IT',
+            'hr' => 'ฝ่ายทรัพยากรบุคคล',
+            'employee' => 'พนักงาน',
+            'express' => 'พนักงาน Express',
+            default => 'ไม่ระบุ',
+        };
+    }
+
+    /**
+     * Get status label in Thai
+     */
+    public function getStatusLabelAttribute(): string
+    {
+        return match($this->status) {
+            'active' => 'ใช้งาน',
+            'inactive' => 'ไม่ใช้งาน',
+            default => 'ไม่ระบุ',
+        };
+    }
+
+    /**
+     * Get status badge color
+     */
+    public function getStatusBadgeColorAttribute(): string
+    {
+        return match($this->status) {
+            'active' => 'success',
+            'inactive' => 'secondary',
+            default => 'secondary',
+        };
     }
 }

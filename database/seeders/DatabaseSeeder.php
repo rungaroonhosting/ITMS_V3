@@ -17,7 +17,7 @@ class DatabaseSeeder extends Seeder
         // เรียงลำดับการ Seed ตาม Dependencies
         $this->call([
             DepartmentSeeder::class,
-            UserSeeder::class,  // จะสร้าง Employees ด้วย
+            //UserSeeder::class,  // จะสร้าง Employees ด้วย
             ComputerSeeder::class,
         ]);
         

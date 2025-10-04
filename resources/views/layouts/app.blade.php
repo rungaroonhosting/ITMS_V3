@@ -6,176 +6,180 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'ITMS - IT Management System')</title>
     
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- Font Awesome Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    
-    <!-- Custom CSS -->
     <link href="{{ asset('assets/css/app.css') }}" rel="stylesheet">
     
     @stack('styles')
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-light">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="{{ route('dashboard') }}">
-                <i class="fas fa-laptop-code me-2"></i>
-                ITMS - IT Management System
-            </a>
-            
-            <div class="navbar-nav ms-auto">
-                @auth
-                <div class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                        <i class="fas fa-user-circle me-1"></i>
-                        {{ Auth::user()->name }}
-                    </a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="{{ route('profile') }}">
-                            <i class="fas fa-user me-2"></i>โปรไฟล์
-                        </a></li>
-                        <li><a class="dropdown-item" href="{{ route('password.change') }}">
-                            <i class="fas fa-lock me-2"></i>เปลี่ยนรหัสผ่าน
-                        </a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li>
-                            <form action="{{ route('logout') }}" method="POST" class="d-inline">
-                                @csrf
-                                <button type="submit" class="dropdown-item text-danger">
-                                    <i class="fas fa-sign-out-alt me-2"></i>ออกจากระบบ
-                                </button>
-                            </form>
-                        </li>
-                    </ul>
+<!-- Top Navbar - Fixed -->
+<nav class="navbar-top">
+    <div class="container-fluid">
+        <div class="navbar-left">
+            <!-- Logo in Navbar -->
+            <div class="navbar-logo-box">
+                <div class="navbar-logo">
+                    <i class="fas fa-laptop-code"></i>
+                    <div class="logo-text">
+                        <h4>ITMS</h4>
+                        <p>IT Management System</p>
+                    </div>
                 </div>
-                @endauth
+            </div>
+            
+            <button class="menu-toggle" id="sidebarToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            
+            <div class="breadcrumb-nav">
+                <a href="{{ route('dashboard') }}" class="breadcrumb-link">หน้าหลัก</a>
+                <span class="breadcrumb-separator">/</span>
+                <span class="breadcrumb-current">Dashboard</span>
             </div>
         </div>
-    </nav>
-
-    <div class="container-fluid">
-        <div class="row">
+        
+        <div class="navbar-right">
+            <span class="navbar-date">ศุกร์, 03 ตุลาคม 2025</span>
+            <span class="navbar-badge">SUPER ADMIN</span>
+            
             @auth
-            <!-- Sidebar -->
-            <div class="col-md-3 col-lg-2 px-0">
-                <div class="sidebar p-3">
-                    <nav class="nav flex-column">
-                        @if(Auth::user()->hasAdminPrivileges())
-                        <!-- Admin Menu -->
-                        <div class="nav-header mb-3">
-                            <h6 class="text-white-50 text-uppercase fw-bold">การจัดการ</h6>
-                        </div>
-                        
-                        <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" 
-                           href="{{ route('admin.dashboard') }}">
-                            <i class="fas fa-tachometer-alt me-2"></i>แดชบอร์ดผู้ดูแล
-                        </a>
-                        
-                        <a class="nav-link {{ request()->routeIs('admin.employees*') ? 'active' : '' }}" 
-                           href="{{ route('admin.employees.index') }}">
-                            <i class="fas fa-users me-2"></i>จัดการพนักงาน
-                        </a>
-                        
-                        <a class="nav-link {{ request()->routeIs('admin.departments*') ? 'active' : '' }}" 
-                           href="{{ route('admin.departments.index') }}">
-                            <i class="fas fa-building me-2"></i>จัดการแผนก
-                        </a>
-                        
-                        <a class="nav-link {{ request()->routeIs('admin.computers*') ? 'active' : '' }}" 
-                           href="{{ route('admin.computers.index') }}">
-                            <i class="fas fa-desktop me-2"></i>จัดการครุภัณฑ์
-                        </a>
-                        
-                        <a class="nav-link {{ request()->routeIs('admin.users*') ? 'active' : '' }}" 
-                           href="{{ route('admin.users.index') }}">
-                            <i class="fas fa-user-cog me-2"></i>จัดการผู้ใช้งาน
-                        </a>
-
-                        <hr class="my-3">
-                        @endif
-                        
-                        <!-- User Menu -->
-                        <div class="nav-header mb-3">
-                            <h6 class="text-white-50 text-uppercase fw-bold">เมนูหลัก</h6>
-                        </div>
-                        
-                        <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" 
-                           href="{{ route('dashboard') }}">
-                            <i class="fas fa-home me-2"></i>หน้าหลัก
-                        </a>
-                    </nav>
-                </div>
+            <div class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                    <i class="fas fa-bell"></i>
+                    แจ้งเตือน
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                        <form action="{{ route('logout') }}" method="POST">
+                            @csrf
+                            <button type="submit" class="dropdown-item text-danger">
+                                <i class="fas fa-sign-out-alt me-2"></i>ออกจากระบบ
+                            </button>
+                        </form>
+                    </li>
+                </ul>
             </div>
             @endauth
-            
-            <!-- Main Content -->
-            <div class="@auth col-md-9 col-lg-10 @else col-12 @endauth">
-                @if(isset($page_header))
-                <div class="page-header">
-                    <div class="container">
-                        <h1 class="mb-0">{{ $page_header }}</h1>
-                        @isset($page_description)
-                        <p class="mb-0 opacity-75">{{ $page_description }}</p>
-                        @endisset
-                    </div>
-                </div>
-                @endif
-                
-                <div class="container-fluid py-4">
-                    <!-- Flash Messages -->
-                    @if(session('success'))
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <i class="fas fa-check-circle me-2"></i>
-                        {{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                    @endif
-                    
-                    @if(session('error'))
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <i class="fas fa-exclamation-circle me-2"></i>
-                        {{ session('error') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                    @endif
-                    
-                    @if(session('message'))
-                    <div class="alert alert-info alert-dismissible fade show" role="alert">
-                        <i class="fas fa-info-circle me-2"></i>
-                        {{ session('message') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                    @endif
-                    
-                    @if($errors->any())
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        <strong>เกิดข้อผิดพลาด:</strong>
-                        <ul class="mb-0 mt-2">
-                            @foreach($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                    @endif
-                    
-                    <!-- Page Content -->
-                    @yield('content')
-                </div>
-            </div>
         </div>
     </div>
+</nav>
 
-    <!-- Scripts -->
+    <div class="layout-wrapper">
+        @auth
+        <!-- Sidebar with Logo -->
+        <aside class="sidebar" id="sidebar"> 
+            <div class="sidebar-content">
+                <div class="sidebar-section">
+                    <a class="sidebar-link active" href="{{ route('dashboard') }}">
+                        <i class="fas fa-home"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </div>
+                
+                @if(Auth::user()->isSuperAdmin() || Auth::user()->isItAdmin())
+                <div class="sidebar-section">
+                    <h6 class="sidebar-title">จัดการบุคลากร</h6>
+                    <a class="sidebar-link" href="{{ route('employees.index') }}">
+                        <i class="fas fa-users"></i>
+                        <span>จัดการพนักงาน</span>
+                    </a>
+                    <a class="sidebar-link" href="#">
+                        <i class="fas fa-building"></i>
+                        <span>จัดการสาขา</span>
+                        <span class="badge-new">NEW</span>
+                    </a>
+                    <a class="sidebar-link" href="#">
+                        <i class="fas fa-sitemap"></i>
+                        <span>จัดการแผนก</span>
+                    </a>
+                </div>
+                
+                <div class="sidebar-section">
+                    <h6 class="sidebar-title">จัดการ IT</h6>
+                    <a class="sidebar-link" href="#">
+                        <i class="fas fa-desktop"></i>
+                        <span>จัดการอุปกรณ์ IT</span>
+                    </a>
+                    <a class="sidebar-link" href="#">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span>จัดการข้อตกลง IT</span>
+                    </a>
+                    <a class="sidebar-link" href="#">
+                        <i class="fas fa-tools"></i>
+                        <span>จัดการแจ้งซ่อม</span>
+                    </a>
+                    <a class="sidebar-link" href="#">
+                        <i class="fas fa-archive"></i>
+                        <span>จัดการคำขอบริการ</span>
+                    </a>
+                    <a class="sidebar-link" href="#">
+                        <i class="fas fa-list-alt"></i>
+                        <span>รายงานทั้งหมด</span>
+                    </a>
+                </div>
+                
+                <div class="sidebar-section">
+                    <h6 class="sidebar-title">เพิ่มข้อมูล</h6>
+                    <a class="sidebar-link" href="{{ route('employees.create') }}">
+                        <i class="fas fa-user-plus"></i>
+                        <span>เพิ่มพนักงาน</span>
+                    </a>
+                    <a class="sidebar-link" href="#">
+                        <i class="fas fa-building"></i>
+                        <span>เพิ่มสาขา</span>
+                        <span class="badge-new">NEW</span>
+                    </a>
+                    <a class="sidebar-link" href="#">
+                        <i class="fas fa-sitemap"></i>
+                        <span>เพิ่มแผนก</span>
+                    </a>
+                </div>
+                
+                <div class="sidebar-section">
+                    <h6 class="sidebar-title">ระบบการตั้งค่า</h6>
+                    <a class="sidebar-link" href="#">
+                        <i class="fas fa-list"></i>
+                        <span>รายการย่อยทั้งหมด</span>
+                    </a>
+                    <a class="sidebar-link" href="#">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>เพิ่มข้อมูล</span>
+                    </a>
+                    <a class="sidebar-link" href="#">
+                        <i class="fas fa-download"></i>
+                        <span>ส่งออกข้อมูล</span>
+                    </a>
+                    <a class="sidebar-link" href="#">
+                        <i class="fas fa-cog"></i>
+                        <span>ตั้งค่าระบบ</span>
+                    </a>
+                </div>
+                @endif
+            </div>
+        </aside>
+        @endauth
+        
+        <!-- Main Content -->
+        <main class="main-content" id="mainContent">
+            @yield('content')
+        </main>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- Custom JavaScript -->
     <script src="{{ asset('assets/js/app.js') }}"></script>
     
+    <script>
+    document.getElementById('sidebarToggle')?.addEventListener('click', function() {
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        
+        sidebar?.classList.toggle('sidebar-collapsed');
+        mainContent?.classList.toggle('content-expanded');
+    });
+    </script>
+    
     @stack('scripts')
+    
 </body>
 </html>

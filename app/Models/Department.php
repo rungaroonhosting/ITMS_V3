@@ -4,74 +4,57 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Department extends Model
 {
     use HasFactory;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
+        'code',
         'name',
         'description',
+        'manager_id',
+        'express_enabled', // เพิ่ม field นี้สำหรับระบบ Express
         'is_active',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
+        'express_enabled' => 'boolean',
         'is_active' => 'boolean',
     ];
 
-    // =================== Relationships ===================
-    
-    /**
-     * Get the employees for the department.
-     */
-    public function employees()
+    // Relationships
+    public function manager(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class, 'manager_id');
+    }
+
+    public function employees(): HasMany
     {
         return $this->hasMany(Employee::class);
     }
 
-    /**
-     * Get active employees for the department.
-     */
-    public function activeEmployees()
+    public function positions(): HasMany
     {
-        return $this->hasMany(Employee::class)->where('is_active', true);
+        return $this->hasMany(Position::class);
     }
 
-    // =================== Scopes ===================
-    
-    /**
-     * Scope for active departments
-     */
+    // Scopes
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
     }
 
-    // =================== Helper Methods ===================
-    
-    /**
-     * Get employees count
-     */
-    public function getEmployeesCountAttribute()
+    public function scopeExpressEnabled($query)
     {
-        return $this->employees()->count();
+        return $query->where('express_enabled', true);
     }
 
-    /**
-     * Get active employees count
-     */
-    public function getActiveEmployeesCountAttribute()
+    // Accessors
+    public function getEmployeeCountAttribute(): int
     {
-        return $this->activeEmployees()->count();
+        return $this->employees()->count();
     }
 }
